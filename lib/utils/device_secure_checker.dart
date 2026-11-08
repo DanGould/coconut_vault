@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<bool> isDeviceSecured() async {
+  // Desktop demo build: no Linux implementation of the OS channel.
+  if (Platform.isLinux) return true;
   try {
     const MethodChannel channel = MethodChannel(methodChannelOS);
     final bool result = await channel.invokeMethod('isDeviceSecure');

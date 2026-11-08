@@ -58,8 +58,10 @@ Future<void> bootstrapApp({required bool isLiteBuild, required Widget app}) asyn
     await ScreenProtector.preventScreenshotOn(); // iOS and Android
   }
 
-  // bluetooth
-  await FlutterBluePlus.setOptions(showPowerAlert: false);
+  // bluetooth (no Linux plugin)
+  if (!Platform.isLinux) {
+    await FlutterBluePlus.setOptions(showPowerAlert: false);
+  }
 
   // 리졸버 설정
   // 아래 경고를 위한 조치

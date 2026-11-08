@@ -70,6 +70,14 @@ class ConnectivityProvider extends ChangeNotifier {
   /// * 단, iOS에서는 개발자모드 여부를 제공하지 않기 때문에 제외합니다.
   /// TODO: 리팩토링 필요함
   Future<void> setConnectActivity({required bool network, required bool bluetooth, required bool developerMode}) async {
+    if (Platform.isLinux) {
+      // Desktop demo build: there is no bluetooth plugin, and the demo host is
+      // online by design, so report both as off.
+      _isNetworkOn = false;
+      _isBluetoothOn = false;
+      _onConnectivityChanged();
+      return;
+    }
     if (bluetooth) {
       // 현재 블루투스 상태 즉시 확인
       await _checkCurrentBluetoothState();

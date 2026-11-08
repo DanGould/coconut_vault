@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:coconut_vault/constants/method_channel.dart';
 import 'package:coconut_vault/constants/shared_preferences_keys.dart';
 import 'package:coconut_vault/repository/shared_preferences_repository.dart';
@@ -16,6 +18,10 @@ class SecurityPrechecker {
   // jailbreakDetectionIgnored 상태와 저장 시간을 저장 후 performSecurityCheck 재호출함.
   // preformSecurityCheck 메서드에서 30분 이내 저장된 정보면, 비밀번호 설정 여부 검사해야함.
   Future<SecurityCheckResult> performSecurityCheck() async {
+    if (Platform.isLinux) {
+      // Desktop demo build: the OS checks have no Linux implementation.
+      return SecurityCheckResult(status: SecurityCheckStatus.secure, checkTime: DateTime.now());
+    }
     final sharedPrefs = SharedPrefsRepository();
     final jailbreakDetectionIgnored = sharedPrefs.getBool(SharedPrefsKeys.jailbreakDetectionIgnored) ?? false;
     final jailbreakDetectionIgnoredTime = sharedPrefs.getInt(SharedPrefsKeys.jailbreakDetectionIgnoredTime) ?? 0;
