@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:coconut_vault/services/secure_zone/linux/desktop_demo_keystore.dart';
 import 'package:coconut_vault/services/secure_zone/ios/secure_enclave_keystore.dart';
 import 'package:coconut_vault/services/secure_zone/secure_zone_keystore.dart';
 import 'package:coconut_vault/services/secure_zone/android/hardware_backed_keystore.dart';
@@ -87,7 +88,12 @@ class SecureZoneRepository implements SecureZoneRepositoryContract {
   static final SecureZoneRepository _instance = SecureZoneRepository._internal();
   factory SecureZoneRepository() => _instance;
   SecureZoneRepository._internal() {
-    _secureZoneKeystore = Platform.isAndroid ? HardwareBackedKeystore() : SecureEnclaveKeystore();
+    _secureZoneKeystore =
+        Platform.isLinux
+            ? DesktopDemoKeystore()
+            : Platform.isAndroid
+            ? HardwareBackedKeystore()
+            : SecureEnclaveKeystore();
   }
 
   late final SecureZoneKeystore _secureZoneKeystore;
