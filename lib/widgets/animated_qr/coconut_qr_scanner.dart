@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:coconut_design_system/coconut_design_system.dart';
 import 'package:coconut_vault/localization/strings.g.dart';
 import 'package:coconut_vault/providers/app_lifecycle_state_provider.dart';
 import 'package:coconut_vault/providers/visibility_provider.dart';
 import 'package:coconut_vault/utils/app_settings_util.dart';
 import 'package:coconut_vault/utils/logger.dart';
+import 'package:coconut_vault/widgets/animated_qr/desktop_qr_feed.dart';
 import 'package:coconut_vault/widgets/animated_qr/scan_data_handler/i_fragmented_qr_scan_data_handler.dart';
 import 'package:coconut_vault/widgets/animated_qr/scan_data_handler/i_qr_scan_data_handler.dart';
 import 'package:coconut_vault/widgets/animated_qr/scan_data_handler/scan_data_handler_exceptions.dart';
@@ -104,7 +107,11 @@ class _CoconutQrScannerState extends State<CoconutQrScanner> with SingleTickerPr
     final barcode = codes.first;
     if (barcode.rawValue == null) return;
 
-    final scanData = barcode.rawValue!;
+    _handleScanData(barcode.rawValue!);
+  }
+
+  void _handleScanData(String scanData) {
+    if (widget.qrDataHandler.isCompleted()) return;
     var handler = widget.qrDataHandler;
 
     try {
@@ -191,27 +198,30 @@ class _CoconutQrScannerState extends State<CoconutQrScanner> with SingleTickerPr
 
         return Stack(
           children: [
-            MobileScanner(
-              controller: _controller,
-              scanWindow: scanWindow,
-              onDetect: _onDetect,
-              errorBuilder: (context, error) {
-                if (widget.onScannerInitError != null) {
-                  widget.onScannerInitError!(error);
-                }
+            if (Platform.isLinux)
+              DesktopQrFeed(onScanData: _handleScanData)
+            else
+              MobileScanner(
+                controller: _controller,
+                scanWindow: scanWindow,
+                onDetect: _onDetect,
+                errorBuilder: (context, error) {
+                  if (widget.onScannerInitError != null) {
+                    widget.onScannerInitError!(error);
+                  }
 
-                if (error.errorCode == MobileScannerErrorCode.permissionDenied && !_isShowedCameraPermissionDialog) {
-                  _isShowedCameraPermissionDialog = true;
-                  WidgetsBinding.instance.addPostFrameCallback((_) async {
-                    if (!mounted) return;
-                    await _showCameraPermissionDialog();
-                    if (!mounted) return;
-                    Navigator.pop(context);
-                  });
-                }
-                return Center(child: Text(error.errorCode.message));
-              },
-            ),
+                  if (error.errorCode == MobileScannerErrorCode.permissionDenied && !_isShowedCameraPermissionDialog) {
+                    _isShowedCameraPermissionDialog = true;
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      if (!mounted) return;
+                      await _showCameraPermissionDialog();
+                      if (!mounted) return;
+                      Navigator.pop(context);
+                    });
+                  }
+                  return Center(child: Text(error.errorCode.message));
+                },
+              ),
             ScannerOverlay(tooltipTextSpan: widget.tooltipTextSpan),
             _buildProgressOverlay(context),
           ],
